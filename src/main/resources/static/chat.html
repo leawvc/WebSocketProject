@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카카오톡 스타일 채팅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 사이드바 */
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #fee500;
+            color: #3c1e1e;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .refresh-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #3c1e1e;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .refresh-button:hover {
+            background: rgba(0,0,0,0.1);
+        }
+
+        .refresh-button:active {
+            transform: rotate(180deg);
+            transition: transform 0.3s;
+        }
+
+        .user-info {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fee500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #3c1e1e;
+        }
+
+        .room-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .room-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .room-item:hover {
+            background: #f8f9fa;
+        }
+
+        .room-item.active {
+            background: #fee500;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .room-name {
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        .room-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .room-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-last-message {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .unread-badge {
+            background: #ff3b30;
+            color: white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 0 6px;
+        }
+
+        /* 메인 채팅 영역 */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: #fee500;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            font-weight: bold;
+            color: #3c1e1e;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .message.own {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #fee500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #3c1e1e;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            max-width: 60%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.own .message-content {
+            background: #fee500;
+            color: #3c1e1e;
+        }
+
+        .message.other .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+        }
+
+        .message-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .message.own .message-info {
+            justify-content: flex-end;
+        }
+
+        .message-time {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .message.own .message-time {
+            text-align: right;
+        }
+
+        .system-message {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin: 10px 0;
+            padding: 5px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+
+        .typing-indicator {
+            padding: 10px 20px;
+            color: #666;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            max-height: 100px;
+            min-height: 40px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #fee500;
+        }
+
+        .send-button {
+            padding: 12px 20px;
+            background: #fee500;
+            border: none;
+            border-radius: 20px;
+            color: #3c1e1e;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .send-button:hover {
+            background: #fdd835;
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .emoji-button {
+            padding: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 10px;
+            display: none;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .emoji-picker.show {
+            display: grid;
+        }
+
+        .emoji-item {
+            padding: 5px;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .emoji-item:hover {
+            background: #f8f9fa;
+        }
+
+        /* 로그인 화면 */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fee500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-form {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .login-form h1 {
+            color: #3c1e1e;
+            margin-bottom: 30px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: #fee500;
+            border: none;
+            border-radius: 10px;
+            color: #3c1e1e;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* 토스트 메시지 */
+        .toast-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+            cursor: pointer;
+            border-left: 4px solid #fee500;
+        }
+
+        .toast-message:hover {
+            background: #444;
+            transform: translateX(0) scale(1.02);
+        }
+
+        .toast-message.show {
+            transform: translateX(0);
+        }
+
+        /* 애니메이션 추가 */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-form">
+            <h1>카카오톡 스타일 채팅</h1>
+            <input type="text" id="userIdInput" class="login-input" placeholder="사용자 ID" />
+            <input type="text" id="usernameInput" class="login-input" placeholder="사용자 이름" />
+            <button onclick="login()" class="login-button">로그인</button>
+        </div>
+    </div>
+
+    <!-- 메인 채팅 화면 -->
+    <div id="chatContainer" class="container hidden">
+        <!-- 사이드바 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>채팅방 목록</span>
+                <button class="refresh-button" onclick="forceRefreshRooms()" title="새로고침">🔄</button>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div>
+                    <div id="userName"></div>
+                    <div style="font-size: 12px; color: #666;">온라인</div>
+                </div>
+            </div>
+
+            <div class="room-list" id="roomList">
+                <!-- 채팅방 목록이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+
+        <!-- 메인 채팅 영역 -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="chat-title" id="chatTitle">채팅방을 선택하세요</div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- 메시지들이 여기에 동적으로 추가됩니다 -->
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                누군가 입력 중...
+            </div>
+
+            <div class="chat-input">
+                <div class="input-container">
+                    <textarea 
+                        id="messageInput" 
+                        class="message-input" 
+                        placeholder="메시지를 입력하세요..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="handleTyping()"
+                    ></textarea>
+                    <button class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+                    <button id="sendButton" class="send-button" onclick="sendMessage()" disabled>전송</button>
+                </div>
+                
+                <div id="emojiPicker" class="emoji-picker">
+                    <div class="emoji-item" onclick="sendEmoji('😊')">😊</div>
+                    <div class="emoji-item" onclick="sendEmoji('😂')">😂</div>
+                    <div class="emoji-item" onclick="sendEmoji('❤️')">❤️</div>
+                    <div class="emoji-item" onclick="sendEmoji('👍')">👍</div>
+                    <div class="emoji-item" onclick="sendEmoji('👎')">👎</div>
+                    <div class="emoji-item" onclick="sendEmoji('🎉')">🎉</div>
+                    <div class="emoji-item" onclick="sendEmoji('🔥')">🔥</div>
+                    <div class="emoji-item" onclick="sendEmoji('😭')">😭</div>
+                    <div class="emoji-item" onclick="sendEmoji('🤔')">🤔</div>
+                    <div class="emoji-item" onclick="sendEmoji('😎')">😎</div>
+                    <div class="emoji-item" onclick="sendEmoji('🥳')">🥳</div>
+                    <div class="emoji-item" onclick="sendEmoji('😴')">😴</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let currentUser = null;
+        let currentRoom = null;
+        let rooms = [];
+        let typingTimeout;
+        let roomUpdateInterval; // 채팅방 목록 주기적 갱신
+        let unreadCountInterval; // 읽지 않은 메시지 수 주기적 갱신
+
+        // 로그인
+        async function login() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            const username = document.getElementById('usernameInput').value.trim();
+            
+            if (!userId || !username) {
+                alert('사용자 ID와 이름을 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/chat/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userId, username })
+                });
+
+                if (response.ok) {
+                    currentUser = { userId, username };
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('chatContainer').classList.remove('hidden');
+                    document.getElementById('userName').textContent = username;
+                    document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
+                    
+                    loadRooms();
+                    startPeriodicUpdates();
+                } else {
+                    alert('로그인에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('로그인 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 주기적 업데이트 시작
+        function startPeriodicUpdates() {
+            // 채팅방 목록 2초마다 갱신 (더 자주)
+            roomUpdateInterval = setInterval(() => {
+                if (currentUser) {
+                    console.log('주기적 채팅방 목록 갱신 실행...');
+                    loadRooms();
+                }
+            }, 2000);
+
+            // 읽지 않은 메시지 수 1초마다 갱신 (더 자주)
+            unreadCountInterval = setInterval(() => {
+                if (currentUser) {
+                    updateUnreadCounts();
+                }
+            }, 1000);
+
+            // 페이지 포커스 시 즉시 갱신
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && currentUser) {
+                    console.log('페이지 포커스 시 채팅방 목록 갱신');
+                    loadRooms();
+                    updateUnreadCounts();
+                }
+            });
+
+            // 브라우저 탭 활성화 시 갱신
+            window.addEventListener('focus', () => {
+                if (currentUser) {
+                    console.log('브라우저 탭 활성화 시 채팅방 목록 갱신');
+                    loadRooms();
+                    updateUnreadCounts();
+                }
+            });
+        }
+
+        // 읽지 않은 메시지 수 업데이트
+        async function updateUnreadCounts() {
+            try {
+                const response = await fetch(`/api/notifications/unread-counts?userId=${currentUser.userId}`);
+                const unreadCounts = await response.json();
+                
+                // 채팅방 목록의 읽지 않은 메시지 수 업데이트
+                let hasChanges = false;
+                rooms.forEach(room => {
+                    const unreadCount = unreadCounts[room.roomId] || 0;
+                    if (room.unreadCount !== unreadCount) {
+                        room.unreadCount = unreadCount;
+                        hasChanges = true;
+                        console.log(`채팅방 ${room.roomName}의 읽지 않은 메시지 수: ${unreadCount}`);
+                    }
+                });
+                
+                if (hasChanges) {
+                    renderRoomList();
+                }
+            } catch (error) {
+                console.error('Update unread counts error:', error);
+            }
+        }
+
+        // 채팅방 목록 로드
+        async function loadRooms() {
+            try {
+                console.log('채팅방 목록 로드 시작...');
+                const response = await fetch(`/api/chat/rooms?userId=${currentUser.userId}`);
+                const newRooms = await response.json();
+                console.log('서버에서 받은 채팅방 목록:', newRooms);
+                
+                // 새 채팅방이 있는지 확인 (더 정확한 비교)
+                const hasNewRooms = newRooms.length !== rooms.length || 
+                    newRooms.some((newRoom, index) => {
+                        const oldRoom = rooms[index];
+                        const isDifferent = !oldRoom || 
+                               newRoom.roomId !== oldRoom.roomId || 
+                               newRoom.lastMessage !== oldRoom.lastMessage ||
+                               newRoom.lastMessageTime !== oldRoom.lastMessageTime ||
+                               newRoom.roomName !== oldRoom.roomName;
+                        
+                        if (isDifferent) {
+                            console.log('변경된 채팅방 발견:', { old: oldRoom, new: newRoom });
+                        }
+                        return isDifferent;
+                    });
+                
+                if (hasNewRooms) {
+                    console.log('채팅방 목록 변경 감지, UI 업데이트 중...');
+                    rooms = newRooms;
+                    renderRoomList();
+                    console.log('채팅방 목록이 갱신되었습니다.');
+                    
+                    // 새로 추가된 채팅방이 있으면 자동으로 첫 번째 채팅방에 연결
+                    if (!currentRoom && rooms.length > 0) {
+                        console.log('첫 번째 채팅방에 자동 연결:', rooms[0].roomName);
+                        joinRoom(rooms[0]);
+                    }
+                } else {
+                    console.log('채팅방 목록 변경 없음');
+                }
+                
+                return rooms; // Promise 결과로 반환
+            } catch (error) {
+                console.error('Load rooms error:', error);
+                return rooms; // 에러 시에도 기존 목록 반환
+            }
+        }
+
+        // 채팅방 목록 렌더링
+        function renderRoomList() {
+            const roomList = document.getElementById('roomList');
+            roomList.innerHTML = '';
+
+            rooms.forEach(room => {
+                const roomItem = document.createElement('div');
+                roomItem.className = 'room-item';
+                roomItem.onclick = () => joinRoom(room);
+                
+                // 읽지 않은 메시지 수 표시
+                const unreadBadge = room.unreadCount > 0 ? 
+                    `<span class="unread-badge">${room.unreadCount}</span>` : '';
+                
+                // 마지막 메시지 시간 표시
+                const lastMessageTime = room.lastMessageTime ? 
+                    formatMessageTime(new Date(room.lastMessageTime)) : '';
+                
+                roomItem.innerHTML = `
+                    <div class="room-header">
+                        <div class="room-name">${room.roomName}</div>
+                        <div class="room-time">${lastMessageTime}</div>
+                    </div>
+                    <div class="room-content">
+                        <div class="room-last-message">${room.lastMessage || '새로운 채팅방입니다.'}</div>
+                        ${unreadBadge}
+                    </div>
+                `;
+                
+                roomList.appendChild(roomItem);
+            });
+        }
+
+        // 메시지 시간 포맷팅
+        function formatMessageTime(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return date.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else if (diffDays === 1) {
+                return '어제';
+            } else if (diffDays < 7) {
+                return `${diffDays}일 전`;
+            } else {
+                return date.toLocaleDateString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+        }
+
+        // 채팅방 참가
+        function joinRoom(room) {
+            console.log('채팅방 참가 시도:', room.roomName, room.roomId);
+            
+            // 기존 WebSocket 연결이 있으면 정상적으로 종료
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                console.log('기존 WebSocket 연결 종료 중...');
+                socket.close(1000, '새 채팅방으로 이동');
+            }
+
+            currentRoom = room;
+            document.getElementById('chatTitle').textContent = room.roomName;
+            document.getElementById('chatMessages').innerHTML = '';
+            
+            // WebSocket 연결
+            connectWebSocket(room);
+            
+            // 채팅방 목록에서 활성 상태 표시
+            document.querySelectorAll('.room-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 클릭된 채팅방 아이템 찾기
+            const roomItems = document.querySelectorAll('.room-item');
+            for (let item of roomItems) {
+                const roomNameElement = item.querySelector('.room-name');
+                if (roomNameElement && roomNameElement.textContent === room.roomName) {
+                    item.classList.add('active');
+                    break;
+                }
+            }
+        }
+
+        // WebSocket 연결 함수
+        function connectWebSocket(room) {
+            console.log('=== WebSocket 연결 시도 시작 ===');
+            console.log('연결 URL:', `ws://localhost:8081/ws/chat?roomId=${room.roomId}&userId=${currentUser.userId}`);
+            console.log('현재 사용자:', currentUser);
+            console.log('선택된 채팅방:', room);
+            
+            // 기존 연결이 있으면 완전히 정리
+            if (socket) {
+                console.log('기존 WebSocket 연결 정리 중...');
+                socket.onclose = null;
+                socket.onerror = null;
+                socket.onmessage = null;
+                socket.onopen = null;
+            }
+            
+            socket = new WebSocket(`ws://localhost:8081/ws/chat?roomId=${room.roomId}&userId=${currentUser.userId}`);
+            
+            socket.onopen = function() {
+                console.log('=== WebSocket 연결 성공 ===');
+                console.log('연결된 채팅방:', room.roomName);
+                console.log('연결된 사용자:', currentUser.userId);
+                console.log('WebSocket 상태:', socket.readyState);
+                loadMessages();
+                
+                // 읽지 않은 메시지 수 초기화
+                room.unreadCount = 0;
+                renderRoomList();
+            };
+            
+            socket.onmessage = function(event) {
+                console.log('=== WebSocket 메시지 수신 ===');
+                console.log('원본 데이터:', event.data);
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('파싱된 데이터:', data);
+                    handleMessage(data);
+                } catch (error) {
+                    console.error('메시지 파싱 오류:', error);
+                }
+            };
+            
+            socket.onclose = function(event) {
+                console.log('=== WebSocket 연결 종료 ===');
+                console.log('종료 코드:', event.code);
+                console.log('종료 이유:', event.reason);
+                console.log('정상 종료 여부:', event.wasClean);
+                
+                // 정상 종료가 아닌 경우에만 재연결 시도
+                if (event.code !== 1000 && currentRoom && currentRoom.roomId === room.roomId) {
+                    console.log('비정상 종료로 인한 재연결 시도...');
+                    setTimeout(() => {
+                        if (currentRoom && currentRoom.roomId === room.roomId) {
+                            console.log('WebSocket 재연결 시도...');
+                            connectWebSocket(currentRoom);
+                        }
+                    }, 3000);
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.error('=== WebSocket 오류 ===');
+                console.error('오류 상세:', error);
+                console.error('WebSocket 상태:', socket.readyState);
+            };
+        }
+
+        // 메시지 로드
+        async function loadMessages() {
+            try {
+                const response = await fetch(`/api/chat/rooms/${currentRoom.roomId}/messages?size=50`);
+                const data = await response.json();
+                
+                data.content.reverse().forEach(message => {
+                    addMessageToUI(message);
+                });
+                
+                scrollToBottom();
+            } catch (error) {
+                console.error('Load messages error:', error);
+            }
+        }
+
+        // 메시지 처리
+        function handleMessage(data) {
+            console.log('WebSocket 메시지 수신:', data);
+            
+            switch (data.type) {
+                case 'message':
+                    addMessageToUI(data);
+                    scrollToBottom();
+                    
+                    // 메시지 수신 시 즉시 채팅방 목록 갱신
+                    console.log('메시지 수신으로 인한 채팅방 목록 갱신 시작');
+                    setTimeout(() => {
+                        loadRooms().then(() => {
+                            // 새 메시지가 온 채팅방이 목록에 없으면 강제로 다시 로드
+                            const messageRoom = rooms.find(room => room.roomId === data.roomId);
+                            if (!messageRoom) {
+                                console.log('새 메시지가 온 채팅방이 목록에 없음, 강제 재로드');
+                                loadRooms();
+                            } else {
+                                console.log('채팅방 목록에 메시지가 온 채팅방 확인됨:', messageRoom.roomName);
+                            }
+                        });
+                    }, 100);
+                    break;
+                case 'system':
+                    console.log('시스템 메시지 처리:', data.content);
+                    addSystemMessage(data.content);
+                    break;
+                case 'typing':
+                    console.log('타이핑 인디케이터 처리:', data);
+                    handleTypingIndicator(data);
+                    break;
+                case 'emoji':
+                    console.log('이모티콘 메시지 처리:', data);
+                    addEmojiMessage(data);
+                    break;
+                case 'unreadCount':
+                    console.log('읽지 않은 메시지 수 업데이트:', data.count);
+                    // 현재 채팅방의 읽지 않은 메시지 수 업데이트
+                    if (currentRoom) {
+                        currentRoom.unreadCount = data.count;
+                        renderRoomList();
+                    }
+                    break;
+                case 'notification':
+                    console.log('실시간 알림 수신:', data);
+                    showNotification(data);
+                    break;
+                case 'roomUpdate':
+                    console.log('채팅방 업데이트 이벤트 수신:', data);
+                    // 채팅방 목록 갱신
+                    if (data.action === 'messageReceived') {
+                        setTimeout(() => {
+                            loadRooms();
+                        }, 100);
+                    }
+                    break;
+                default:
+                    console.log('알 수 없는 메시지 타입:', data.type, data);
+            }
+        }
+
+        // 실시간 알림 표시
+        function showNotification(data) {
+            console.log('실시간 알림 표시:', data);
+            
+            // 브라우저 알림 표시
+            if (Notification.permission === 'granted') {
+                const notification = new Notification('새 메시지', {
+                    body: `${data.senderName}: ${data.content}`,
+                    icon: '/favicon.ico',
+                    tag: data.roomId
+                });
+                
+                notification.onclick = function() {
+                    window.focus();
+                    // 해당 채팅방으로 이동
+                    const targetRoom = rooms.find(room => room.roomId === data.roomId);
+                    if (targetRoom) {
+                        joinRoom(targetRoom);
+                    }
+                    notification.close();
+                };
+                
+                // 5초 후 자동으로 닫기
+                setTimeout(() => {
+                    notification.close();
+                }, 5000);
+            }
+            
+            // 토스트 알림 표시 (브라우저 알림이 거부된 경우)
+            showToastNotification(data);
+        }
+        
+        // 토스트 알림 표시
+        function showToastNotification(data) {
+            // 토스트 컨테이너가 없으면 생성
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    max-width: 300px;
+                `;
+                document.body.appendChild(toastContainer);
+            }
+            
+            // 토스트 메시지 생성
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                background: #333;
+                color: white;
+                padding: 12px 16px;
+                margin-bottom: 8px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                cursor: pointer;
+                animation: slideIn 0.3s ease-out;
+                font-size: 14px;
+            `;
+            
+            toast.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 4px;">${data.roomName}</div>
+                <div style="color: #ccc;">${data.senderName}: ${data.content}</div>
+            `;
+            
+            // 클릭 시 해당 채팅방으로 이동
+            toast.onclick = function() {
+                const targetRoom = rooms.find(room => room.roomId === data.roomId);
+                if (targetRoom) {
+                    joinRoom(targetRoom);
+                }
+                toast.remove();
+            };
+            
+            toastContainer.appendChild(toast);
+            
+            // 5초 후 자동으로 제거
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // UI에 메시지 추가
+        function addMessageToUI(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const isOwn = message.senderId === currentUser.userId;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            
+            const time = new Date(message.sentAt).toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${message.senderName.charAt(0).toUpperCase()}</div>
+                <div class="message-content">
+                    <div class="message-info">
+                        <span>${message.senderName}</span>
+                    </div>
+                    <div>${message.content}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+        }
+
+        // 시스템 메시지 추가
+        function addSystemMessage(content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const systemDiv = document.createElement('div');
+            systemDiv.className = 'system-message';
+            systemDiv.textContent = content;
+            chatMessages.appendChild(systemDiv);
+            scrollToBottom();
+        }
+
+        // 이모티콘 메시지 추가
+        function addEmojiMessage(data) {
+            const chatMessages = document.getElementById('chatMessages');
+            const isOwn = data.senderId === currentUser.userId;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            
+            const time = new Date(data.sentAt).toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${data.senderName.charAt(0).toUpperCase()}</div>
+                <div class="message-content">
+                    <div class="message-info">
+                        <span>${data.senderName}</span>
+                    </div>
+                    <div style="font-size: 24px;">${data.emoji}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // 타이핑 인디케이터 처리
+        function handleTypingIndicator(data) {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (data.isTyping) {
+                typingIndicator.textContent = `${data.username}님이 입력 중...`;
+                typingIndicator.style.display = 'block';
+            } else {
+                typingIndicator.style.display = 'none';
+            }
+        }
+
+        // 메시지 전송
+        function sendMessage() {
+            console.log('=== 메시지 전송 시작 ===');
+            
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            console.log('입력된 메시지:', content);
+            console.log('WebSocket 존재 여부:', !!socket);
+            console.log('WebSocket 상태:', socket ? socket.readyState : 'N/A');
+            
+            if (!content) {
+                console.log('메시지가 비어있음 - 전송 취소');
+                return;
+            }
+            
+            if (!socket) {
+                console.error('WebSocket이 존재하지 않음 - 전송 취소');
+                return;
+            }
+            
+            if (socket.readyState !== WebSocket.OPEN) {
+                console.error('WebSocket이 열려있지 않음 - 전송 취소');
+                console.error('WebSocket 상태:', socket.readyState);
+                return;
+            }
+            
+            const message = {
+                type: 'message',
+                content: content,
+                messageType: 'text'
+            };
+            
+            console.log('전송할 메시지:', message);
+            console.log('JSON 문자열:', JSON.stringify(message));
+            
+            try {
+                socket.send(JSON.stringify(message));
+                console.log('✅ 메시지 전송 성공');
+                input.value = '';
+                input.style.height = 'auto';
+                updateSendButton();
+            } catch (error) {
+                console.error('❌ 메시지 전송 실패:', error);
+            }
+        }
+
+        // 이모티콘 전송
+        function sendEmoji(emoji) {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+            
+            const message = {
+                type: 'emoji',
+                emoji: emoji
+            };
+            
+            socket.send(JSON.stringify(message));
+            toggleEmojiPicker();
+        }
+
+        // 타이핑 처리
+        function handleTyping() {
+            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+            
+            clearTimeout(typingTimeout);
+            
+            socket.send(JSON.stringify({
+                type: 'typing',
+                isTyping: true
+            }));
+            
+            typingTimeout = setTimeout(() => {
+                socket.send(JSON.stringify({
+                    type: 'typing',
+                    isTyping: false
+                }));
+            }, 1000);
+        }
+
+        // 키보드 이벤트 처리
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 이모티콘 피커 토글
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.classList.toggle('show');
+        }
+
+        // 전송 버튼 상태 업데이트
+        function updateSendButton() {
+            const input = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            sendButton.disabled = !input.value.trim();
+        }
+
+        // 스크롤을 맨 아래로
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 입력 필드 이벤트 리스너
+        document.getElementById('messageInput').addEventListener('input', updateSendButton);
+
+        // 이모티콘 피커 외부 클릭 시 닫기
+        document.addEventListener('click', function(event) {
+            const picker = document.getElementById('emojiPicker');
+            const emojiButton = event.target.closest('.emoji-button');
+            
+            if (!picker.contains(event.target) && !emojiButton) {
+                picker.classList.remove('show');
+            }
+        });
+
+        // 페이지 로드 시 기본 채팅방 생성 (테스트용)
+        window.addEventListener('load', async function() {
+            // 브라우저 알림 권한 요청
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            
+            // 테스트용 기본 채팅방 생성
+            try {
+                await fetch('/api/chat/rooms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        roomName: '일반 채팅방',
+                        participants: ['user1', 'user2', 'user3']
+                    })
+                });
+            } catch (error) {
+                console.log('기본 채팅방 생성 실패 (이미 존재할 수 있음)');
+            }
+        });
+
+        // 강제 채팅방 목록 갱신 (수동 호출용)
+        function forceRefreshRooms() {
+            console.log('강제 채팅방 목록 갱신 실행');
+            if (currentUser) {
+                loadRooms().then(() => {
+                    updateUnreadCounts();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
